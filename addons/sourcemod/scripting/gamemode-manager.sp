@@ -19,16 +19,14 @@ public OnPluginStart()
 {
 	CreateConVar("gamemode_manager_version", VERSION, "TF2xTreme version", FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
 	
+	RegAdminCmd("sm_reloadgamemodes", ReloadGamemodes, ADMFLAG_CONFIG, "reload game modes from file config");
 	RegAdminCmd("sm_nextgamemode", SetGamemode, ADMFLAG_CONFIG, "set the next map's gamemode");
 	
-	decl String:sConfigPath[255];
-	
-	BuildPath(PathType:FileType_File, sConfigPath, sizeof(sConfigPath), "configs/gamemodes.cfg");
+	LoadGamemodeConfig();
+}
 
-	hConfig = CreateKeyValues("gamemodes");
-	if (!FileToKeyValues(hConfig, sConfigPath)) {
-		SetFailState("Config could not be loaded!");
-	}
+public Action:ReloadGamemodes(client, args) {
+	LoadGamemodeConfig();
 }
 
 public Action:SetGamemode(client, args) {
@@ -55,6 +53,17 @@ public Action:SetGamemode(client, args) {
 		KvRewind(hConfig);
 		
 		return Plugin_Handled;
+	}
+}
+
+LoadGamemodeConfig() {
+	decl String:sConfigPath[255];
+	
+	BuildPath(PathType:FileType_File, sConfigPath, sizeof(sConfigPath), "configs/gamemodes.cfg");
+
+	hConfig = CreateKeyValues("gamemodes");
+	if (!FileToKeyValues(hConfig, sConfigPath)) {
+		SetFailState("Config could not be loaded!");
 	}
 }
 
