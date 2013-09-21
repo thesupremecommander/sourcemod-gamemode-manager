@@ -67,43 +67,7 @@ public OnMapEnd() {
 		
 		KvGetSectionName(hConfig, sGamemodeSection, sizeof(sGamemodeSection));
 		
-		if (StrEqual(sNextGamemode, sGamemodeSection)) {
-			LogMessage("Loading gamemode: %s", sGamemodeSection);
-			if (KvJumpToKey(hConfig, "plugins")) {
-				KvGotoFirstSubKey(hConfig, false);
-				
-				do {
-					decl String:sPlugin[255];
-					decl String:sPluginPath[511];
-					
-					KvGetString(hConfig, NULL_STRING, sPlugin, sizeof(sPlugin));
-					BuildPath(PathType:FileType_File, sPluginPath, sizeof(sPluginPath), "plugins/%s", sPlugin);
-					
-					decl String:sDisabledPluginPath[511];
-					BuildPath(PathType:FileType_File, sDisabledPluginPath, sizeof(sDisabledPluginPath), "plugins/disabled/%s", sPlugin);
-					
-					RenameFile(sPluginPath, sDisabledPluginPath);
-					ServerCommand("sm plugins load %s", sPlugin);
-				} while (KvGotoNextKey(hConfig));
-				
-				KvGoBack(hConfig);
-				KvGoBack(hConfig);
-			}
-			if (KvJumpToKey(hConfig, "enable-commands")) {
-				KvGotoFirstSubKey(hConfig, false);
-				
-				do {
-					decl String:sCommand[255];
-					
-					KvGetString(hConfig, NULL_STRING, sCommand, sizeof(sCommand));
-					ServerCommand("%s", sCommand);
-				} while (KvGotoNextKey(hConfig));
-				
-				KvGoBack(hConfig);
-				KvGoBack(hConfig);
-			}
-		}
-		else {
+		if (!StrEqual(sNextGamemode, sGamemodeSection)) {
 			LogMessage("Unloading gamemode: %s", sGamemodeSection);
 			if (KvJumpToKey(hConfig, "disable-commands")) {
 				KvGotoFirstSubKey(hConfig, false);
@@ -140,4 +104,45 @@ public OnMapEnd() {
 			}
 		}
 	} while (KvGotoNextKey(hConfig));
+	
+	KvGoBack(hConfig);
+	
+	if (KvJumpToKey(hConfig, sNextGamemode)) {
+		LogMessage("Loading gamemode: %s", sNextGamemode);
+		if (KvJumpToKey(hConfig, "plugins")) {
+			KvGotoFirstSubKey(hConfig, false);
+			
+			do {
+				decl String:sPlugin[255];
+				decl String:sPluginPath[511];
+				
+				KvGetString(hConfig, NULL_STRING, sPlugin, sizeof(sPlugin));
+				BuildPath(PathType:FileType_File, sPluginPath, sizeof(sPluginPath), "plugins/%s", sPlugin);
+				
+				decl String:sDisabledPluginPath[511];
+				BuildPath(PathType:FileType_File, sDisabledPluginPath, sizeof(sDisabledPluginPath), "plugins/disabled/%s", sPlugin);
+				
+				RenameFile(sPluginPath, sDisabledPluginPath);
+				ServerCommand("sm plugins load %s", sPlugin);
+			} while (KvGotoNextKey(hConfig));
+			
+			KvGoBack(hConfig);
+			KvGoBack(hConfig);
+		}
+		if (KvJumpToKey(hConfig, "enable-commands")) {
+			KvGotoFirstSubKey(hConfig, false);
+			
+			do {
+				decl String:sCommand[255];
+				
+				KvGetString(hConfig, NULL_STRING, sCommand, sizeof(sCommand));
+				ServerCommand("%s", sCommand);
+			} while (KvGotoNextKey(hConfig));
+			
+			KvGoBack(hConfig);
+			KvGoBack(hConfig);
+		}
+	}
+	
+	KvRewind(hConfig);
 }
