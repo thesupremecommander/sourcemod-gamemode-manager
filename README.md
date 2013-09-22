@@ -66,6 +66,9 @@ Requirements
 Changelog
 ---------
 
+**1.1.0** (2013-09-22)
+* added admin menu
+
 **1.0.2** (2013-09-22)
 * fixed up documentation a little
 
