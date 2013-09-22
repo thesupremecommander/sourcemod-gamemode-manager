@@ -31,8 +31,8 @@ public OnPluginStart()
 	
 	AutoExecConfig();
 	
-	RegAdminCmd("sm_reloadgamemodes", ReloadGamemodes, ADMFLAG_CONFIG, "reload game modes from file config");
-	RegAdminCmd("sm_nextgamemode", NextGamemode, ADMFLAG_CONFIG, "set the next map's gamemode");
+	RegAdminCmd("sm_reloadgamemodes", ReloadGamemodes, ADMFLAG_CONFIG, "reload game modes from config");
+	RegAdminCmd("sm_nextgamemode", NextGamemode, ADMFLAG_CONFIG, "get/set the next map's gamemode");
 	
 	LoadGamemodeConfig();
 }
