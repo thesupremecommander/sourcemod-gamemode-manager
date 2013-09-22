@@ -66,6 +66,9 @@ Requirements
 Changelog
 ---------
 
+**1.0.2** (2013-09-22)
+* fixed up documentation a little
+
 **1.0.1** (2013-09-22)
 * made version CVar public
 * changed path sizes to SourceMod constant
