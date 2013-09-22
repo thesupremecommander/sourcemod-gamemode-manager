@@ -45,7 +45,7 @@ public OnPluginStart()
 public OnAllPluginsLoaded() {
 	if (LibraryExists("adminmenu") && GetAdminTopMenu() != INVALID_HANDLE) {
 		hAdminMenu = GetAdminTopMenu();
-		OnAdminMenuReady(hAdminMenu);
+		SetUpAdminMenu();
 	}
 }
  
@@ -57,11 +57,8 @@ public OnLibraryRemoved(const String:name[]) {
  
 public OnAdminMenuReady(Handle:topmenu)
 {
-	if (hAdminMenu != topmenu)
-	{
-		hAdminMenu = topmenu;
-		SetUpAdminMenu();
-	}
+	hAdminMenu = topmenu;
+	SetUpAdminMenu();
 }
 
 public GamemodeAdminMenu(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength) {
