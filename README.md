@@ -34,23 +34,23 @@ Configuration
 	{
 	}
 	
-	"super-awesome-nonexistent-gamemode"				// name of the gamemode - to use the gamemode, you would issue `sm_nextgamemode super-awesome-nonexistent-gamemode`
+	"super-awesome-nonexistent-gamemode"				// name of the gamemode (e.g. sm_nextgamemode super-awesome-nonexistent-gamemode)
 	{
-		"plugins"										// these plugins will be moved to disabled/ and unloaded when gamemode is unloaded and moved to main plugin folder and loaded when gamemode is loaded
+		"plugins"										// moved between plugins/ and plugins/disabled/ and loaded/unloaded in order specified
 		{
 			"1"	"important-dependency.smx"				// load/unload dependency first
-			"2"	"gamemode/super-awesome-gamemode.smx"	// include full path to plugin - needed to move plugin between disabled and main plugin folder
+			"2"	"gamemode/super-awesome-gamemode.smx"	// include path to plugin from plugins/ folder
 			"3"	"gamemode/gamemode-modifier.smx"		// load plugin that depends on the gamemode last
 		}
 		
-		"enable-commands"								// these commands will be executed in the order they are written after the plugins are loaded when the gamemode is loading
+		"enable-commands"								// executed in the order written after plugins loaded
 		{
 			"1"	"super_gamemode_enabled 1"
 			"2"	"super_gamemode_type 3"
 			"3"	"gamemode_modifier 5.0"
 		}
 		
-		"disable-commands"								// these commands will be executed in the order they are written before the plugins are unloaded when the gamemode is unloading
+		"disable-commands"								// executed in the order written before plugins unloaded
 		{
 			"1"	"super_gamemode_enabled 0"
 		}
@@ -66,6 +66,9 @@ Requirements
 Changelog
 ---------
 
+**1.0.2** (2013-09-22)
+* fixed up documentation a little
+
 **1.0.1** (2013-09-22)
 * made version CVar public
 * changed path sizes to SourceMod constant
@@ -76,5 +79,5 @@ Changelog
 Installation
 ------------
 
-1. Place `plugins/gamemode-manager.cfg` in your `plugins` directory.
+1. Place `plugins/gamemode-manager.smx` in your `plugins` directory.
 2. Edit `configs/gamemodes.cfg` appropriately and place it in your `configs` directory.

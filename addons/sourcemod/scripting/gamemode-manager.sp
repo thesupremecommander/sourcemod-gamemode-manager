@@ -1,6 +1,6 @@
 #include <sourcemod>
 
-#define VERSION "1.0.1"
+#define VERSION "1.0.2"
 
 public Plugin:myinfo = 
 {

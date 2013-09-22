@@ -1,0 +1,91 @@
+[CENTER][SIZE="4"]Gamemode Manager[/SIZE]
+[SIZE="1"]A plugin for SourceMod that helps load gamemodes.[/SIZE][/CENTER]
+
+[B]Features[/B]
+[LIST]
+[*]unloads all other gamemodes before loading chosen gamemode to avoid conflicts
+[*]changes gamemode for next map at current map's end
+[*]works well with Ultimate Mapchooser (using [FONT="Courier New"]postvote-command[/FONT] as [FONT="Courier New"]sm_nextgamemode <gamemode>[/FONT])
+[/LIST]
+
+[B]Usage[/B]
+
+[I]CVars[/I]
+[LIST]
+[*][FONT="Courier New"]gamemode_manager_version[/FONT] - Gamemode Manager version
+[*][FONT="Courier New"]gamemode_manager_use_default <0|1>[/FONT] - how map change should be handled if no gamemode was specifically set (0 - use gamemode of current map, 1 - use default gamemode specified by [FONT="Courier New"]gamemode_manager_default_gamemode[/FONT])
+[*][FONT="Courier New"]gamemode_manager_default_gamemode <gamemode>[/FONT] - the default gamemode to be loaded each map (for [FONT="Courier New"]gamemode_manager_use_default 1[/FONT])
+[*][FONT="Courier New"]gamemode_manager_debug <0|1>[/FONT] - turns on debugging and action logging
+[/LIST]
+
+[I]Commands[/I]
+[LIST]
+[*][FONT="Courier New"]sm_reloadgamemodes[/FONT] - reload game modes from file config
+[*][FONT="Courier New"]sm_nextgamemode [gamemode][/FONT] - get/set the next map's gamemode
+[/LIST]
+
+[B]Configuration[/B]
+[CODE]"gamemodes"
+{
+	"vanilla"							// a gamemode included by default that unloads all other gamemodes when run
+	{
+	}
+	
+	"super-awesome-nonexistent-gamemode"				// name of the gamemode (e.g. [FONT="Courier New"]sm_nextgamemode super-awesome-nonexistent-gamemode[/FONT])
+	{
+		"plugins"						// moved between plugins/ and plugins/disabled/ and loaded/unloaded in order specified
+		{
+			"1"	"important-dependency.smx"		// load/unload dependency first
+			"2"	"gamemode/super-awesome-gamemode.smx"	// include full path to plugin
+			"3"	"gamemode/gamemode-modifier.smx"	// load plugin that depends on the gamemode last
+		}
+		
+		"enable-commands"					// executed in the order written after plugins loaded
+		{
+			"1"	"super_gamemode_enabled 1"
+			"2"	"super_gamemode_type 3"
+			"3"	"gamemode_modifier 5.0"
+		}
+		
+		"disable-commands"					// executed in the order written before plugins unloaded
+		{
+			"1"	"super_gamemode_enabled 0"
+		}
+	}
+}[/CODE]
+
+[B]Requirements[/B]
+[LIST]
+[*]SourceMod
+[/LIST]
+
+[B]Changelog[/B]
+
+[I]1.0.2[/I] (2013-09-22)
+[LIST]
+[*]fixed up documentation a little
+[/LIST]
+
+[I]1.0.1[/I] (2013-09-22)
+[LIST]
+[*]made version CVar public
+[*]changed path sizes to SourceMod constant
+[/LIST]
+
+[I]1.0.0[/I] (2013-09-22)
+[LIST]
+[*]initial release
+[/LIST]
+
+[B]Installation[/B]
+[LIST=1]
+[*]Place [FONT="Courier New"]plugins/gamemode-manager.smx[/FONT] in your [FONT="Courier New"]plugins[/FONT] directory.
+[*]Edit [FONT="Courier New"]configs/gamemodes.cfg[/FONT] appropriately and place it in your [FONT="Courier New"]configs[/FONT] directory.
+[/LIST]
+
+[B]Download[/B]
+[LIST=1]
+[*][URL="https://raw.github.com/thesupremecommander/sourcemod-gamemode-manager/master/addons/sourcemod/plugins/gamemode-manager.smx"][FONT="Courier New"]plugins/gamemode-manager.smx[/FONT][/URL]
+[*][URL="https://raw.github.com/thesupremecommander/sourcemod-gamemode-manager/master/addons/sourcemod/scripting/gamemode-manager.sp"][FONT="Courier New"]scripting/gamemode-manager.sp[/FONT][/URL]
+[*][URL="https://raw.github.com/thesupremecommander/sourcemod-gamemode-manager/master/addons/sourcemod/configs/gamemodes.cfg"][FONT="Courier New"]configs/gamemodes.cfg[/FONT][/URL]
+[/LIST]
