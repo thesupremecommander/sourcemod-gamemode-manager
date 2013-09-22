@@ -1,6 +1,9 @@
 #include <sourcemod>
 
-#define VERSION "1.0.2"
+#define VERSION "1.1.0"
+
+#undef REQUIRE_PLUGIN
+#include <adminmenu>
 
 public Plugin:myinfo = 
 {
@@ -15,6 +18,8 @@ new Handle:hConfig;
 
 new Handle:hDefaultOption;
 new Handle:hDefaultGamemode;
+
+new Handle:hAdminMenu = INVALID_HANDLE;
 
 new bool:bDebug;
 
@@ -35,6 +40,49 @@ public OnPluginStart()
 	RegAdminCmd("sm_nextgamemode", NextGamemode, ADMFLAG_CONFIG, "get/set the next map's gamemode");
 	
 	LoadGamemodeConfig();
+}
+ 
+public OnAllPluginsLoaded() {
+	if (LibraryExists("adminmenu") && GetAdminTopMenu() != INVALID_HANDLE) {
+		hAdminMenu = GetAdminTopMenu();
+		SetUpAdminMenu();
+	}
+}
+ 
+public OnLibraryRemoved(const String:name[]) {
+	if (StrEqual(name, "adminmenu")) {
+		hAdminMenu = INVALID_HANDLE;
+	}
+}
+ 
+public OnAdminMenuReady(Handle:topmenu)
+{
+	hAdminMenu = topmenu;
+	SetUpAdminMenu();
+}
+
+public GamemodeAdminMenu(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength) {
+	if (action == TopMenuAction_DisplayTitle) {
+		Format(buffer, maxlength, "Set Next Gamemode:");
+	}
+	else if (action == TopMenuAction_DisplayOption) {
+		Format(buffer, maxlength, "Gamemode Manager");
+	}
+}
+
+public GamemodeSelectedFromMenu(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength) {
+	if (action == TopMenuAction_DisplayOption) {
+		GetTopMenuInfoString(topmenu, object_id, buffer, maxlength);
+	}
+	else if (action == TopMenuAction_SelectOption) {
+		GetTopMenuInfoString(topmenu, object_id, sNextGamemode, sizeof(sNextGamemode));
+		
+		ReplyToCommand(param, "Gamemode for next map set to '%s'.", sNextGamemode);
+		
+		if (bDebug) {
+			LogMessage("Gamemode for next map set to '%s'.", sNextGamemode);
+		}
+	}
 }
 
 public ToggleDebugging(Handle:convar, const String:oldValue[], const String:newValue[]) {
@@ -102,6 +150,35 @@ LoadGamemodeConfig() {
 		SetFailState("Config could not be loaded!");
 	}
 	else {
+		SetUpAdminMenu();
+		
+		if (bDebug) {
+			LogMessage("Gamemode config loaded.");
+		}
+	}
+}
+
+SetUpAdminMenu() {
+	if (hAdminMenu != INVALID_HANDLE) {
+		if (FindTopMenuCategory(hAdminMenu, "Gamemode Manager") != INVALID_TOPMENUOBJECT) {
+			RemoveFromTopMenu(hAdminMenu, FindTopMenuCategory(hAdminMenu, "Gamemode Manager"));
+		}
+		
+		new TopMenuObject:tmoGamemodeCategory = AddToTopMenu(hAdminMenu, "Gamemode Manager", TopMenuObject_Category, GamemodeAdminMenu, INVALID_TOPMENUOBJECT, "sm_nextgamemode", ADMFLAG_CONFIG);
+		
+		KvRewind(hConfig);
+		KvGotoFirstSubKey(hConfig);
+		
+		do {
+			decl String:sGamemodeSection[255];
+			
+			KvGetSectionName(hConfig, sGamemodeSection, sizeof(sGamemodeSection));
+			
+			AddToTopMenu(hAdminMenu, sGamemodeSection, TopMenuObject_Item, GamemodeSelectedFromMenu, tmoGamemodeCategory, "sm_nextgamemode", ADMFLAG_CONFIG, sGamemodeSection);
+		} while (KvGotoNextKey(hConfig));
+		
+		KvRewind(hConfig);
+		
 		if (bDebug) {
 			LogMessage("Gamemode config loaded.");
 		}
@@ -117,7 +194,7 @@ LoadGamemode(const String:sGamemode[]) {
 		
 		KvGetSectionName(hConfig, sGamemodeSection, sizeof(sGamemodeSection));
 		
-		if (!StrEqual(sGamemode, sGamemodeSection)) {
+		if (!StrEqual(sGamemode, sGamemodeSection, false)) {
 			if (bDebug) {
 				LogMessage("Unloading gamemode: %s", sGamemodeSection);
 			}
