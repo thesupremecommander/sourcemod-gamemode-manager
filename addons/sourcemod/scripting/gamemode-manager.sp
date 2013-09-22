@@ -93,7 +93,7 @@ public OnMapEnd() {
 }
 
 LoadGamemodeConfig() {
-	decl String:sConfigPath[255];
+	decl String:sConfigPath[PLATFORM_MAX_PATH];
 	
 	BuildPath(PathType:FileType_File, sConfigPath, sizeof(sConfigPath), "configs/gamemodes.cfg");
 
@@ -141,13 +141,13 @@ LoadGamemode(const String:sGamemode[]) {
 				
 				do {
 					if (KvGetDataType(hConfig, NULL_STRING) == KvData_String) {
-						decl String:sPlugin[255];
-						decl String:sPluginPath[511];
+						decl String:sPlugin[PLATFORM_MAX_PATH];
+						decl String:sPluginPath[PLATFORM_MAX_PATH];
 						
 						KvGetString(hConfig, NULL_STRING, sPlugin, sizeof(sPlugin));
 						BuildPath(PathType:FileType_File, sPluginPath, sizeof(sPluginPath), "plugins/%s", sPlugin);
 						
-						decl String:sDisabledPluginPath[511];
+						decl String:sDisabledPluginPath[PLATFORM_MAX_PATH];
 						BuildPath(PathType:FileType_File, sDisabledPluginPath, sizeof(sDisabledPluginPath), "plugins/disabled/%s", sPlugin);
 						
 						ServerCommand("sm plugins unload %s", sPlugin);
@@ -175,13 +175,13 @@ LoadGamemode(const String:sGamemode[]) {
 			
 			do {
 				if (KvGetDataType(hConfig, NULL_STRING) == KvData_String) {
-					decl String:sPlugin[255];
-					decl String:sPluginPath[511];
+					decl String:sPlugin[PLATFORM_MAX_PATH];
+					decl String:sPluginPath[PLATFORM_MAX_PATH];
 					
 					KvGetString(hConfig, NULL_STRING, sPlugin, sizeof(sPlugin));
 					BuildPath(PathType:FileType_File, sPluginPath, sizeof(sPluginPath), "plugins/%s", sPlugin);
 					
-					decl String:sDisabledPluginPath[511];
+					decl String:sDisabledPluginPath[PLATFORM_MAX_PATH];
 					BuildPath(PathType:FileType_File, sDisabledPluginPath, sizeof(sDisabledPluginPath), "plugins/disabled/%s", sPlugin);
 					
 					if (FileExists(sDisabledPluginPath)) {
