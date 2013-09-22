@@ -76,5 +76,5 @@ Changelog
 Installation
 ------------
 
-1. Place `plugins/gamemode-manager.cfg` in your `plugins` directory.
+1. Place `plugins/gamemode-manager.smx` in your `plugins` directory.
 2. Edit `configs/gamemodes.cfg` appropriately and place it in your `configs` directory.
