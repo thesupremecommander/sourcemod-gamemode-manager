@@ -16,6 +16,8 @@ new Handle:hConfig;
 new Handle:hDefaultOption;
 new Handle:hDefaultGamemode;
 
+new bool:bDebug;
+
 new String:sNextGamemode[255];
 
 public OnPluginStart()
@@ -23,6 +25,9 @@ public OnPluginStart()
 	CreateConVar("gamemode_manager_version", VERSION, "Gamemode Manager version", FCVAR_PLUGIN|FCVAR_CHEAT|FCVAR_DONTRECORD);
 	hDefaultOption = CreateConVar("gamemode_manager_use_default", "1", "how map change should be handled if no gamemode was specifically set (0 - use gamemode of current map, 1 - use default gamemode specified by gamemode_manager_default_gamemode)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	hDefaultGamemode = CreateConVar("gamemode_manager_default_gamemode", "vanilla", "the default gamemode to be loaded each map (for gamemode_manager_use_default 1)", FCVAR_PLUGIN);
+	new Handle:hDebug = CreateConVar("gamemode_manager_debug", "0", "turns on debugging and action logging", FCVAR_PLUGIN|FCVAR_DONTRECORD, true, 0.0, true, 1.0);
+	
+	HookConVarChange(hDebug, ToggleDebugging);
 	
 	AutoExecConfig();
 	
@@ -30,6 +35,15 @@ public OnPluginStart()
 	RegAdminCmd("sm_nextgamemode", NextGamemode, ADMFLAG_CONFIG, "set the next map's gamemode");
 	
 	LoadGamemodeConfig();
+}
+
+public ToggleDebugging(Handle:convar, const String:oldValue[], const String:newValue[]) {
+	if (StringToInt(newValue) == 0) {
+		bDebug = false;
+	}
+	else {
+		bDebug = true;
+	}
 }
 
 public Action:ReloadGamemodes(client, args) {
@@ -49,12 +63,17 @@ public Action:NextGamemode(client, args) {
 		KvRewind(hConfig);
 		
 		if (!KvJumpToKey(hConfig, sGamemode)) {
-			ReplyToCommand(client, "Gamemode not found in config!");
+			ReplyToCommand(client, "Gamemode '%s' not found in config!", sNextGamemode);
+			if (bDebug) {
+				LogMessage("Gamemode '%s' not found in config!", sNextGamemode);
+			}
 		}
 		else {
 			strcopy(sNextGamemode, sizeof(sNextGamemode), sGamemode);
 			ReplyToCommand(client, "Gamemode for next map set to '%s'.", sNextGamemode);
-			LogMessage("Gamemode for next map set to '%s'.", sNextGamemode);
+			if (bDebug) {
+				LogMessage("Gamemode for next map set to '%s'.", sNextGamemode);
+			}
 		}
 		
 		KvRewind(hConfig);
@@ -82,6 +101,11 @@ LoadGamemodeConfig() {
 	if (!FileToKeyValues(hConfig, sConfigPath)) {
 		SetFailState("Config could not be loaded!");
 	}
+	else {
+		if (bDebug) {
+			LogMessage("Gamemode config loaded.");
+		}
+	}
 }
 
 LoadGamemode(const String:sGamemode[]) {
@@ -94,7 +118,9 @@ LoadGamemode(const String:sGamemode[]) {
 		KvGetSectionName(hConfig, sGamemodeSection, sizeof(sGamemodeSection));
 		
 		if (!StrEqual(sGamemode, sGamemodeSection)) {
-			LogMessage("Unloading gamemode: %s", sGamemodeSection);
+			if (bDebug) {
+				LogMessage("Unloading gamemode: %s", sGamemodeSection);
+			}
 			if (KvJumpToKey(hConfig, "disable-commands")) {
 				KvGotoFirstSubKey(hConfig, false);
 				
@@ -141,7 +167,9 @@ LoadGamemode(const String:sGamemode[]) {
 	KvGoBack(hConfig);
 	
 	if (KvJumpToKey(hConfig, sGamemode)) {
-		LogMessage("Loading gamemode: %s", sGamemode);
+		if (bDebug) {
+			LogMessage("Loading gamemode: %s", sGamemode);
+		}
 		if (KvJumpToKey(hConfig, "plugins")) {
 			KvGotoFirstSubKey(hConfig, false);
 			
