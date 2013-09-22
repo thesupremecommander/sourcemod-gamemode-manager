@@ -22,7 +22,7 @@ new String:sNextGamemode[255];
 
 public OnPluginStart()
 {
-	CreateConVar("gamemode_manager_version", VERSION, "Gamemode Manager version", FCVAR_PLUGIN|FCVAR_CHEAT|FCVAR_DONTRECORD);
+	CreateConVar("gamemode_manager_version", VERSION, "Gamemode Manager version", FCVAR_PLUGIN|FCVAR_NOTIFY|FCVAR_CHEAT|FCVAR_DONTRECORD);
 	hDefaultOption = CreateConVar("gamemode_manager_use_default", "1", "how map change should be handled if no gamemode was specifically set (0 - use gamemode of current map, 1 - use default gamemode specified by gamemode_manager_default_gamemode)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	hDefaultGamemode = CreateConVar("gamemode_manager_default_gamemode", "vanilla", "the default gamemode to be loaded each map (for gamemode_manager_use_default 1)", FCVAR_PLUGIN);
 	new Handle:hDebug = CreateConVar("gamemode_manager_debug", "0", "turns on debugging and action logging", FCVAR_PLUGIN|FCVAR_DONTRECORD, true, 0.0, true, 1.0);
