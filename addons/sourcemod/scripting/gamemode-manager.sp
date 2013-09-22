@@ -27,7 +27,7 @@ public OnPluginStart()
 	AutoExecConfig();
 	
 	RegAdminCmd("sm_reloadgamemodes", ReloadGamemodes, ADMFLAG_CONFIG, "reload game modes from file config");
-	RegAdminCmd("sm_nextgamemode", SetGamemode, ADMFLAG_CONFIG, "set the next map's gamemode");
+	RegAdminCmd("sm_nextgamemode", NextGamemode, ADMFLAG_CONFIG, "set the next map's gamemode");
 	
 	LoadGamemodeConfig();
 }
@@ -36,7 +36,7 @@ public Action:ReloadGamemodes(client, args) {
 	LoadGamemodeConfig();
 }
 
-public Action:SetGamemode(client, args) {
+public Action:NextGamemode(client, args) {
 	if (args == 0) {
 		ReplyToCommand(client, "Gamemode for next map will be '%s'.", sNextGamemode);
 		
@@ -99,10 +99,12 @@ LoadGamemode(const String:sGamemode[]) {
 				KvGotoFirstSubKey(hConfig, false);
 				
 				do {
-					decl String:sCommand[255];
-					
-					KvGetString(hConfig, NULL_STRING, sCommand, sizeof(sCommand));
-					ServerCommand("%s", sCommand);
+					if (KvGetDataType(hConfig, NULL_STRING) == KvData_String) {
+						decl String:sCommand[255];
+						
+						KvGetString(hConfig, NULL_STRING, sCommand, sizeof(sCommand));
+						ServerCommand("%s", sCommand);
+					}
 				} while (KvGotoNextKey(hConfig));
 				
 				KvGoBack(hConfig);
@@ -112,17 +114,22 @@ LoadGamemode(const String:sGamemode[]) {
 				KvGotoFirstSubKey(hConfig, false);
 				
 				do {
-					decl String:sPlugin[255];
-					decl String:sPluginPath[511];
-					
-					KvGetString(hConfig, NULL_STRING, sPlugin, sizeof(sPlugin));
-					BuildPath(PathType:FileType_File, sPluginPath, sizeof(sPluginPath), "plugins/%s", sPlugin);
-					
-					decl String:sDisabledPluginPath[511];
-					BuildPath(PathType:FileType_File, sDisabledPluginPath, sizeof(sDisabledPluginPath), "plugins/disabled/%s", sPlugin);
-					
-					ServerCommand("sm plugins unload %s", sPlugin);
-					RenameFile(sDisabledPluginPath, sPluginPath);
+					if (KvGetDataType(hConfig, NULL_STRING) == KvData_String) {
+						decl String:sPlugin[255];
+						decl String:sPluginPath[511];
+						
+						KvGetString(hConfig, NULL_STRING, sPlugin, sizeof(sPlugin));
+						BuildPath(PathType:FileType_File, sPluginPath, sizeof(sPluginPath), "plugins/%s", sPlugin);
+						
+						decl String:sDisabledPluginPath[511];
+						BuildPath(PathType:FileType_File, sDisabledPluginPath, sizeof(sDisabledPluginPath), "plugins/disabled/%s", sPlugin);
+						
+						ServerCommand("sm plugins unload %s", sPlugin);
+						
+						if (FileExists(sPluginPath)) {
+							RenameFile(sDisabledPluginPath, sPluginPath);
+						}
+					}
 				} while (KvGotoNextKey(hConfig));
 				
 				KvGoBack(hConfig);
@@ -139,17 +146,22 @@ LoadGamemode(const String:sGamemode[]) {
 			KvGotoFirstSubKey(hConfig, false);
 			
 			do {
-				decl String:sPlugin[255];
-				decl String:sPluginPath[511];
-				
-				KvGetString(hConfig, NULL_STRING, sPlugin, sizeof(sPlugin));
-				BuildPath(PathType:FileType_File, sPluginPath, sizeof(sPluginPath), "plugins/%s", sPlugin);
-				
-				decl String:sDisabledPluginPath[511];
-				BuildPath(PathType:FileType_File, sDisabledPluginPath, sizeof(sDisabledPluginPath), "plugins/disabled/%s", sPlugin);
-				
-				RenameFile(sPluginPath, sDisabledPluginPath);
-				ServerCommand("sm plugins load %s", sPlugin);
+				if (KvGetDataType(hConfig, NULL_STRING) == KvData_String) {
+					decl String:sPlugin[255];
+					decl String:sPluginPath[511];
+					
+					KvGetString(hConfig, NULL_STRING, sPlugin, sizeof(sPlugin));
+					BuildPath(PathType:FileType_File, sPluginPath, sizeof(sPluginPath), "plugins/%s", sPlugin);
+					
+					decl String:sDisabledPluginPath[511];
+					BuildPath(PathType:FileType_File, sDisabledPluginPath, sizeof(sDisabledPluginPath), "plugins/disabled/%s", sPlugin);
+					
+					if (FileExists(sDisabledPluginPath)) {
+						RenameFile(sPluginPath, sDisabledPluginPath);
+					}
+					
+					ServerCommand("sm plugins load %s", sPlugin);
+				}
 			} while (KvGotoNextKey(hConfig));
 			
 			KvGoBack(hConfig);
@@ -159,10 +171,12 @@ LoadGamemode(const String:sGamemode[]) {
 			KvGotoFirstSubKey(hConfig, false);
 			
 			do {
-				decl String:sCommand[255];
-				
-				KvGetString(hConfig, NULL_STRING, sCommand, sizeof(sCommand));
-				ServerCommand("%s", sCommand);
+				if (KvGetDataType(hConfig, NULL_STRING) == KvData_String) {
+					decl String:sCommand[255];
+					
+					KvGetString(hConfig, NULL_STRING, sCommand, sizeof(sCommand));
+					ServerCommand("%s", sCommand);
+				}
 			} while (KvGotoNextKey(hConfig));
 			
 			KvGoBack(hConfig);
