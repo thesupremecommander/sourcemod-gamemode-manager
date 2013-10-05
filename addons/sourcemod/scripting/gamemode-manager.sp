@@ -44,7 +44,7 @@ public OnPluginStart()
 }
  
 public OnAllPluginsLoaded() {
-	if (LibraryExists("adminmenu") && GetAdminTopMenu() != INVALID_HANDLE) {
+	if (LibraryExists("adminmenu") && hAdminMenu != GetAdminTopMenu()) {
 		hAdminMenu = GetAdminTopMenu();
 		SetUpAdminMenu();
 	}
@@ -81,7 +81,7 @@ public GamemodeMenu(Handle:menu, MenuAction:action, param1, param2) {
 
 public GamemodeAdminMenu(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength) {
 	if (action == TopMenuAction_DisplayOption) {
-		Format(buffer, maxlength, "Gamemode Manager");
+		Format(buffer, maxlength, "Select Next Gamemode");
 	}
 	else if (action == TopMenuAction_SelectOption) {
 		OpenGamemodeMenu(param, 0);
@@ -169,10 +169,12 @@ LoadGamemodeConfig() {
 }
 
 SetUpAdminMenu() {
-	if (hAdminMenu != INVALID_HANDLE) {
-		if (FindTopMenuCategory(hAdminMenu, "Gamemode Manager") == INVALID_TOPMENUOBJECT) {
-			AddToTopMenu(hAdminMenu, "Gamemode Manager", TopMenuObject_Category, GamemodeAdminMenu, INVALID_TOPMENUOBJECT, "sm_gamemodemenu", ADMFLAG_CONFIG);
-			
+	if (hAdminMenu != INVALID_HANDLE) {		
+		new TopMenuObject:tmoServerCommands = FindTopMenuCategory(hAdminMenu, ADMINMENU_SERVERCOMMANDS);
+ 
+		if (tmoServerCommands != INVALID_TOPMENUOBJECT) {
+			AddToTopMenu(hAdminMenu, "Gamemode Manager", TopMenuObject_Item, GamemodeAdminMenu, tmoServerCommands, "sm_gamemodemenu", ADMFLAG_CONFIG);
+		
 			if (bDebug) {
 				LogMessage("Admin menu added.");
 			}
