@@ -63,7 +63,20 @@ public OnAdminMenuReady(Handle:topmenu)
 }
 
 public GamemodeMenu(Handle:menu, MenuAction:action, param1, param2) {
-	// IMPLEMENT HANDLING HERE
+	switch(action) {
+		case MenuAction_Select:
+		{
+			decl String:sSelectedGamemode[255];
+			GetMenuItem(menu, param2, sSelectedGamemode, sizeof(sSelectedGamemode));
+			
+			SetNextGamemode(param1, sSelectedGamemode);
+		}
+
+		case MenuAction_End:
+		{
+			CloseHandle(menu);
+		}
+	}
 }
 
 public GamemodeAdminMenu(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength) {
@@ -98,25 +111,7 @@ public Action:NextGamemode(client, args) {
 		decl String:sGamemode[255];
 		GetCmdArg(1, sGamemode, sizeof(sGamemode));
 		
-		new Handle:hConfig = CloneHandle(Handle:hGlobalConfig);
-		KvRewind(hConfig);
-		
-		if (!KvJumpToKey(hConfig, sGamemode)) {
-			ReplyToCommand(client, "Gamemode '%s' not found in config!", sNextGamemode);
-			if (bDebug) {
-				LogMessage("Gamemode '%s' not found in config!", sNextGamemode);
-			}
-		}
-		else {
-			strcopy(sNextGamemode, sizeof(sNextGamemode), sGamemode);
-			ReplyToCommand(client, "Gamemode for next map set to '%s'.", sNextGamemode);
-			if (bDebug) {
-				LogMessage("Gamemode for next map set to '%s'.", sNextGamemode);
-			}
-		}
-		
-		KvRewind(hConfig);
-		CloseHandle(hConfig);
+		SetNextGamemode(client, sGamemode);
 		
 		return Plugin_Handled;
 	}
@@ -183,6 +178,28 @@ SetUpAdminMenu() {
 			}
 		}
 	}
+}
+
+SetNextGamemode(client, const String:sGamemode[]) {
+	new Handle:hConfig = CloneHandle(Handle:hGlobalConfig);
+	KvRewind(hConfig);
+	
+	if (!KvJumpToKey(hConfig, sGamemode)) {
+		ReplyToCommand(client, "Gamemode '%s' not found in config!", sNextGamemode);
+		if (bDebug) {
+			LogMessage("Gamemode '%s' not found in config!", sNextGamemode);
+		}
+	}
+	else {
+		strcopy(sNextGamemode, sizeof(sNextGamemode), sGamemode);
+		ReplyToCommand(client, "Gamemode for next map set to '%s'.", sNextGamemode);
+		if (bDebug) {
+			LogMessage("Gamemode for next map set to '%s'.", sNextGamemode);
+		}
+	}
+	
+	KvRewind(hConfig);
+	CloseHandle(hConfig);
 }
 
 LoadGamemode(const String:sGamemode[]) {
