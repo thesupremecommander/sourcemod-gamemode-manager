@@ -1,6 +1,6 @@
 #include <sourcemod>
 
-#define VERSION "1.1.0"
+#define VERSION "1.2.0"
 
 #undef REQUIRE_PLUGIN
 #include <adminmenu>
@@ -14,7 +14,7 @@ public Plugin:myinfo =
 	url = "http://steamcommunity.com/groups/fwdcp"
 };
 
-new Handle:hConfig;
+new Handle:hGlobalConfig;
 
 new Handle:hDefaultOption;
 new Handle:hDefaultGamemode;
@@ -38,12 +38,13 @@ public OnPluginStart()
 	
 	RegAdminCmd("sm_reloadgamemodes", ReloadGamemodes, ADMFLAG_CONFIG, "reload game modes from config");
 	RegAdminCmd("sm_nextgamemode", NextGamemode, ADMFLAG_CONFIG, "get/set the next map's gamemode");
+	RegAdminCmd("sm_gamemodemenu", OpenGamemodeMenu, ADMFLAG_CONFIG, "opens up a menu to select the next map's gamemode");
 	
 	LoadGamemodeConfig();
 }
  
 public OnAllPluginsLoaded() {
-	if (LibraryExists("adminmenu") && GetAdminTopMenu() != INVALID_HANDLE) {
+	if (LibraryExists("adminmenu") && hAdminMenu != GetAdminTopMenu()) {
 		hAdminMenu = GetAdminTopMenu();
 		SetUpAdminMenu();
 	}
@@ -61,27 +62,29 @@ public OnAdminMenuReady(Handle:topmenu)
 	SetUpAdminMenu();
 }
 
-public GamemodeAdminMenu(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength) {
-	if (action == TopMenuAction_DisplayTitle) {
-		Format(buffer, maxlength, "Set Next Gamemode:");
-	}
-	else if (action == TopMenuAction_DisplayOption) {
-		Format(buffer, maxlength, "Gamemode Manager");
+public GamemodeMenu(Handle:menu, MenuAction:action, param1, param2) {
+	switch(action) {
+		case MenuAction_Select:
+		{
+			decl String:sSelectedGamemode[255];
+			GetMenuItem(menu, param2, sSelectedGamemode, sizeof(sSelectedGamemode));
+			
+			SetNextGamemode(param1, sSelectedGamemode);
+		}
+
+		case MenuAction_End:
+		{
+			CloseHandle(menu);
+		}
 	}
 }
 
-public GamemodeSelectedFromMenu(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength) {
+public GamemodeAdminMenu(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength) {
 	if (action == TopMenuAction_DisplayOption) {
-		GetTopMenuInfoString(topmenu, object_id, buffer, maxlength);
+		Format(buffer, maxlength, "Select Next Gamemode");
 	}
 	else if (action == TopMenuAction_SelectOption) {
-		GetTopMenuInfoString(topmenu, object_id, sNextGamemode, sizeof(sNextGamemode));
-		
-		ReplyToCommand(param, "Gamemode for next map set to '%s'.", sNextGamemode);
-		
-		if (bDebug) {
-			LogMessage("Gamemode for next map set to '%s'.", sNextGamemode);
-		}
+		OpenGamemodeMenu(param, 0);
 	}
 }
 
@@ -108,26 +111,35 @@ public Action:NextGamemode(client, args) {
 		decl String:sGamemode[255];
 		GetCmdArg(1, sGamemode, sizeof(sGamemode));
 		
-		KvRewind(hConfig);
-		
-		if (!KvJumpToKey(hConfig, sGamemode)) {
-			ReplyToCommand(client, "Gamemode '%s' not found in config!", sNextGamemode);
-			if (bDebug) {
-				LogMessage("Gamemode '%s' not found in config!", sNextGamemode);
-			}
-		}
-		else {
-			strcopy(sNextGamemode, sizeof(sNextGamemode), sGamemode);
-			ReplyToCommand(client, "Gamemode for next map set to '%s'.", sNextGamemode);
-			if (bDebug) {
-				LogMessage("Gamemode for next map set to '%s'.", sNextGamemode);
-			}
-		}
-		
-		KvRewind(hConfig);
+		SetNextGamemode(client, sGamemode);
 		
 		return Plugin_Handled;
 	}
+}
+
+public Action:OpenGamemodeMenu(client, args) {
+	new Handle:hMenu = CreateMenu(GamemodeMenu);
+	SetMenuTitle(hMenu, "Select Next Gamemode");
+	
+	new Handle:hConfig = CloneHandle(Handle:hGlobalConfig);
+	KvRewind(hConfig);
+	KvGotoFirstSubKey(hConfig);
+	
+	do {
+		decl String:sGamemodeSection[255];
+		
+		KvGetSectionName(hConfig, sGamemodeSection, sizeof(sGamemodeSection));
+		
+		AddMenuItem(hMenu, sGamemodeSection, sGamemodeSection);
+	} while (KvGotoNextKey(hConfig));
+	
+	KvRewind(hConfig);
+	CloseHandle(hConfig);
+	
+	SetMenuExitButton(hMenu, true);
+	DisplayMenu(hMenu, client, 0);
+	
+	return Plugin_Handled;
 }
 
 public OnMapEnd() {
@@ -145,13 +157,11 @@ LoadGamemodeConfig() {
 	
 	BuildPath(PathType:FileType_File, sConfigPath, sizeof(sConfigPath), "configs/gamemodes.cfg");
 
-	hConfig = CreateKeyValues("gamemodes");
-	if (!FileToKeyValues(hConfig, sConfigPath)) {
+	hGlobalConfig = CreateKeyValues("gamemodes");
+	if (!FileToKeyValues(hGlobalConfig, sConfigPath)) {
 		SetFailState("Config could not be loaded!");
 	}
-	else {
-		SetUpAdminMenu();
-		
+	else {		
 		if (bDebug) {
 			LogMessage("Gamemode config loaded.");
 		}
@@ -159,33 +169,43 @@ LoadGamemodeConfig() {
 }
 
 SetUpAdminMenu() {
-	if (hAdminMenu != INVALID_HANDLE) {
-		if (FindTopMenuCategory(hAdminMenu, "Gamemode Manager") != INVALID_TOPMENUOBJECT) {
-			RemoveFromTopMenu(hAdminMenu, FindTopMenuCategory(hAdminMenu, "Gamemode Manager"));
-		}
+	if (hAdminMenu != INVALID_HANDLE) {		
+		new TopMenuObject:tmoServerCommands = FindTopMenuCategory(hAdminMenu, ADMINMENU_SERVERCOMMANDS);
+ 
+		if (tmoServerCommands != INVALID_TOPMENUOBJECT) {
+			AddToTopMenu(hAdminMenu, "Gamemode Manager", TopMenuObject_Item, GamemodeAdminMenu, tmoServerCommands, "sm_gamemodemenu", ADMFLAG_CONFIG);
 		
-		new TopMenuObject:tmoGamemodeCategory = AddToTopMenu(hAdminMenu, "Gamemode Manager", TopMenuObject_Category, GamemodeAdminMenu, INVALID_TOPMENUOBJECT, "sm_nextgamemode", ADMFLAG_CONFIG);
-		
-		KvRewind(hConfig);
-		KvGotoFirstSubKey(hConfig);
-		
-		do {
-			decl String:sGamemodeSection[255];
-			
-			KvGetSectionName(hConfig, sGamemodeSection, sizeof(sGamemodeSection));
-			
-			AddToTopMenu(hAdminMenu, sGamemodeSection, TopMenuObject_Item, GamemodeSelectedFromMenu, tmoGamemodeCategory, "sm_nextgamemode", ADMFLAG_CONFIG, sGamemodeSection);
-		} while (KvGotoNextKey(hConfig));
-		
-		KvRewind(hConfig);
-		
-		if (bDebug) {
-			LogMessage("Gamemode config loaded.");
+			if (bDebug) {
+				LogMessage("Admin menu added.");
+			}
 		}
 	}
 }
 
+SetNextGamemode(client, const String:sGamemode[]) {
+	new Handle:hConfig = CloneHandle(Handle:hGlobalConfig);
+	KvRewind(hConfig);
+	
+	if (!KvJumpToKey(hConfig, sGamemode)) {
+		ReplyToCommand(client, "Gamemode '%s' not found in config!", sNextGamemode);
+		if (bDebug) {
+			LogMessage("Gamemode '%s' not found in config!", sNextGamemode);
+		}
+	}
+	else {
+		strcopy(sNextGamemode, sizeof(sNextGamemode), sGamemode);
+		ReplyToCommand(client, "Gamemode for next map set to '%s'.", sNextGamemode);
+		if (bDebug) {
+			LogMessage("Gamemode for next map set to '%s'.", sNextGamemode);
+		}
+	}
+	
+	KvRewind(hConfig);
+	CloseHandle(hConfig);
+}
+
 LoadGamemode(const String:sGamemode[]) {
+	new Handle:hConfig = CloneHandle(Handle:hGlobalConfig);
 	KvRewind(hConfig);
 	KvGotoFirstSubKey(hConfig);
 	
@@ -290,4 +310,5 @@ LoadGamemode(const String:sGamemode[]) {
 	}
 	
 	KvRewind(hConfig);
+	CloseHandle(hConfig);
 }

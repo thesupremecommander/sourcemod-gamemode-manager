@@ -23,6 +23,7 @@ Usage
 **Commands**
 * `sm_reloadgamemodes` - reload game modes from file config
 * `sm_nextgamemode [gamemode]` - get/set the next map's gamemode
+* `sm_gamemodemenu` - opens up a menu to select the next map's gamemode
 
 Configuration
 -------------
@@ -65,6 +66,10 @@ Requirements
 
 Changelog
 ---------
+
+**1.2.0** (2013-10-04)
+* revamped admin menu to fix issues
+* prevented possible collisions
 
 **1.1.0** (2013-09-22)
 * added admin menu
