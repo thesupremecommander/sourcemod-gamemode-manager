@@ -1,6 +1,6 @@
 #include <sourcemod>
 
-#define VERSION "1.1.0"
+#define VERSION "1.2.0"
 
 #undef REQUIRE_PLUGIN
 #include <adminmenu>
@@ -38,7 +38,7 @@ public OnPluginStart()
 	
 	RegAdminCmd("sm_reloadgamemodes", ReloadGamemodes, ADMFLAG_CONFIG, "reload game modes from config");
 	RegAdminCmd("sm_nextgamemode", NextGamemode, ADMFLAG_CONFIG, "get/set the next map's gamemode");
-	RegAdminCmd("sm_gamemodemenu", OpenGamemodeMenu, ADMFLAG_CONFIG, "opens up the gamemode menu to select a new gamemode");
+	RegAdminCmd("sm_gamemodemenu", OpenGamemodeMenu, ADMFLAG_CONFIG, "opens up a menu to select the next map's gamemode");
 	
 	LoadGamemodeConfig();
 }
