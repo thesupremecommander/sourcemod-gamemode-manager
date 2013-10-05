@@ -14,7 +14,7 @@ public Plugin:myinfo =
 	url = "http://steamcommunity.com/groups/fwdcp"
 };
 
-new Handle:hConfig;
+new Handle:hGlobalConfig;
 
 new Handle:hDefaultOption;
 new Handle:hDefaultGamemode;
@@ -62,6 +62,10 @@ public OnAdminMenuReady(Handle:topmenu)
 	SetUpAdminMenu();
 }
 
+public GamemodeMenu(Handle:menu, MenuAction:action, param1, param2) {
+	// IMPLEMENT HANDLING HERE
+}
+
 public GamemodeAdminMenu(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength) {
 	if (action == TopMenuAction_DisplayOption) {
 		Format(buffer, maxlength, "Gamemode Manager");
@@ -94,6 +98,7 @@ public Action:NextGamemode(client, args) {
 		decl String:sGamemode[255];
 		GetCmdArg(1, sGamemode, sizeof(sGamemode));
 		
+		new Handle:hConfig = CloneHandle(Handle:hGlobalConfig);
 		KvRewind(hConfig);
 		
 		if (!KvJumpToKey(hConfig, sGamemode)) {
@@ -111,13 +116,33 @@ public Action:NextGamemode(client, args) {
 		}
 		
 		KvRewind(hConfig);
+		CloseHandle(hConfig);
 		
 		return Plugin_Handled;
 	}
 }
 
 public Action:OpenGamemodeMenu(client, args) {
-	// IMPLEMENT GAMEMODE MENU SETUP
+	new Handle:hMenu = CreateMenu(GamemodeMenu);
+	SetMenuTitle(hMenu, "Select Next Gamemode");
+	
+	new Handle:hConfig = CloneHandle(Handle:hGlobalConfig);
+	KvRewind(hConfig);
+	KvGotoFirstSubKey(hConfig);
+	
+	do {
+		decl String:sGamemodeSection[255];
+		
+		KvGetSectionName(hConfig, sGamemodeSection, sizeof(sGamemodeSection));
+		
+		AddMenuItem(hMenu, sGamemodeSection, sGamemodeSection);
+	} while (KvGotoNextKey(hConfig));
+	
+	KvRewind(hConfig);
+	CloseHandle(hConfig);
+	
+	SetMenuExitButton(hMenu, true);
+	DisplayMenu(hMenu, client, 0);
 	
 	return Plugin_Handled;
 }
@@ -137,8 +162,8 @@ LoadGamemodeConfig() {
 	
 	BuildPath(PathType:FileType_File, sConfigPath, sizeof(sConfigPath), "configs/gamemodes.cfg");
 
-	hConfig = CreateKeyValues("gamemodes");
-	if (!FileToKeyValues(hConfig, sConfigPath)) {
+	hGlobalConfig = CreateKeyValues("gamemodes");
+	if (!FileToKeyValues(hGlobalConfig, sConfigPath)) {
 		SetFailState("Config could not be loaded!");
 	}
 	else {		
@@ -161,6 +186,7 @@ SetUpAdminMenu() {
 }
 
 LoadGamemode(const String:sGamemode[]) {
+	new Handle:hConfig = CloneHandle(Handle:hGlobalConfig);
 	KvRewind(hConfig);
 	KvGotoFirstSubKey(hConfig);
 	
@@ -265,4 +291,5 @@ LoadGamemode(const String:sGamemode[]) {
 	}
 	
 	KvRewind(hConfig);
+	CloseHandle(hConfig);
 }
