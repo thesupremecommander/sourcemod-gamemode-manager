@@ -38,6 +38,7 @@ public OnPluginStart()
 	
 	RegAdminCmd("sm_reloadgamemodes", ReloadGamemodes, ADMFLAG_CONFIG, "reload game modes from config");
 	RegAdminCmd("sm_nextgamemode", NextGamemode, ADMFLAG_CONFIG, "get/set the next map's gamemode");
+	RegAdminCmd("sm_gamemodemenu", OpenGamemodeMenu, ADMFLAG_CONFIG, "opens up the gamemode menu to select a new gamemode");
 	
 	LoadGamemodeConfig();
 }
@@ -62,26 +63,11 @@ public OnAdminMenuReady(Handle:topmenu)
 }
 
 public GamemodeAdminMenu(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength) {
-	if (action == TopMenuAction_DisplayTitle) {
-		Format(buffer, maxlength, "Set Next Gamemode:");
-	}
-	else if (action == TopMenuAction_DisplayOption) {
+	if (action == TopMenuAction_DisplayOption) {
 		Format(buffer, maxlength, "Gamemode Manager");
 	}
-}
-
-public GamemodeSelectedFromMenu(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength) {
-	if (action == TopMenuAction_DisplayOption) {
-		GetTopMenuInfoString(topmenu, object_id, buffer, maxlength);
-	}
 	else if (action == TopMenuAction_SelectOption) {
-		GetTopMenuInfoString(topmenu, object_id, sNextGamemode, sizeof(sNextGamemode));
-		
-		ReplyToCommand(param, "Gamemode for next map set to '%s'.", sNextGamemode);
-		
-		if (bDebug) {
-			LogMessage("Gamemode for next map set to '%s'.", sNextGamemode);
-		}
+		OpenGamemodeMenu(param, 0);
 	}
 }
 
@@ -130,6 +116,12 @@ public Action:NextGamemode(client, args) {
 	}
 }
 
+public Action:OpenGamemodeMenu(client, args) {
+	// IMPLEMENT GAMEMODE MENU SETUP
+	
+	return Plugin_Handled;
+}
+
 public OnMapEnd() {
 	LoadGamemode(sNextGamemode);
 	
@@ -149,9 +141,7 @@ LoadGamemodeConfig() {
 	if (!FileToKeyValues(hConfig, sConfigPath)) {
 		SetFailState("Config could not be loaded!");
 	}
-	else {
-		SetUpAdminMenu();
-		
+	else {		
 		if (bDebug) {
 			LogMessage("Gamemode config loaded.");
 		}
@@ -160,27 +150,12 @@ LoadGamemodeConfig() {
 
 SetUpAdminMenu() {
 	if (hAdminMenu != INVALID_HANDLE) {
-		if (FindTopMenuCategory(hAdminMenu, "Gamemode Manager") != INVALID_TOPMENUOBJECT) {
-			RemoveFromTopMenu(hAdminMenu, FindTopMenuCategory(hAdminMenu, "Gamemode Manager"));
-		}
-		
-		new TopMenuObject:tmoGamemodeCategory = AddToTopMenu(hAdminMenu, "Gamemode Manager", TopMenuObject_Category, GamemodeAdminMenu, INVALID_TOPMENUOBJECT, "sm_nextgamemode", ADMFLAG_CONFIG);
-		
-		KvRewind(hConfig);
-		KvGotoFirstSubKey(hConfig);
-		
-		do {
-			decl String:sGamemodeSection[255];
+		if (FindTopMenuCategory(hAdminMenu, "Gamemode Manager") == INVALID_TOPMENUOBJECT) {
+			AddToTopMenu(hAdminMenu, "Gamemode Manager", TopMenuObject_Category, GamemodeAdminMenu, INVALID_TOPMENUOBJECT, "sm_gamemodemenu", ADMFLAG_CONFIG);
 			
-			KvGetSectionName(hConfig, sGamemodeSection, sizeof(sGamemodeSection));
-			
-			AddToTopMenu(hAdminMenu, sGamemodeSection, TopMenuObject_Item, GamemodeSelectedFromMenu, tmoGamemodeCategory, "sm_nextgamemode", ADMFLAG_CONFIG, sGamemodeSection);
-		} while (KvGotoNextKey(hConfig));
-		
-		KvRewind(hConfig);
-		
-		if (bDebug) {
-			LogMessage("Gamemode config loaded.");
+			if (bDebug) {
+				LogMessage("Admin menu added.");
+			}
 		}
 	}
 }
